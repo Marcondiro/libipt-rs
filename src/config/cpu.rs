@@ -64,9 +64,11 @@ impl Cpu {
     /// determines processor specific workarounds
     pub(super) fn determine_errata(self) -> pt_errata {
         let mut errata = pt_errata {
+            _bitfield_align_1: [],
             _bitfield_1: Default::default(),
             reserved: Default::default()
         };
+
         // we dont care about errors here since
         // itll just return an empty errata
         unsafe{ pt_cpu_errata(&mut errata, &self.0); }
