@@ -1,24 +1,11 @@
 use libipt_sys::{
-    pt_event, pt_event_type_ptev_async_branch as PT_EVENT_TYPE_PTEV_ASYNC_BRANCH,
-    pt_event_type_ptev_async_disabled as PT_EVENT_TYPE_PTEV_ASYNC_DISABLED,
-    pt_event_type_ptev_async_paging as PT_EVENT_TYPE_PTEV_ASYNC_PAGING,
-    pt_event_type_ptev_async_vmcs as PT_EVENT_TYPE_PTEV_ASYNC_VMCS,
-    pt_event_type_ptev_cbr as PT_EVENT_TYPE_PTEV_CBR,
-    pt_event_type_ptev_disabled as PT_EVENT_TYPE_PTEV_DISABLED,
-    pt_event_type_ptev_enabled as PT_EVENT_TYPE_PTEV_ENABLED,
-    pt_event_type_ptev_exec_mode as PT_EVENT_TYPE_PTEV_EXEC_MODE,
-    pt_event_type_ptev_exstop as PT_EVENT_TYPE_PTEV_EXSTOP,
-    pt_event_type_ptev_mnt as PT_EVENT_TYPE_PTEV_MNT,
-    pt_event_type_ptev_mwait as PT_EVENT_TYPE_PTEV_MWAIT,
-    pt_event_type_ptev_overflow as PT_EVENT_TYPE_PTEV_OVERFLOW,
-    pt_event_type_ptev_paging as PT_EVENT_TYPE_PTEV_PAGING,
-    pt_event_type_ptev_ptwrite as PT_EVENT_TYPE_PTEV_PTWRITE,
-    pt_event_type_ptev_pwre as PT_EVENT_TYPE_PTEV_PWRE,
-    pt_event_type_ptev_pwrx as PT_EVENT_TYPE_PTEV_PWRX,
-    pt_event_type_ptev_stop as PT_EVENT_TYPE_PTEV_STOP,
-    pt_event_type_ptev_tick as PT_EVENT_TYPE_PTEV_TICK,
-    pt_event_type_ptev_tsx as PT_EVENT_TYPE_PTEV_TSX,
-    pt_event_type_ptev_vmcs as PT_EVENT_TYPE_PTEV_VMCS,
+    pt_event, pt_event_type_ptev_async_branch, pt_event_type_ptev_async_disabled,
+    pt_event_type_ptev_async_paging, pt_event_type_ptev_async_vmcs, pt_event_type_ptev_cbr,
+    pt_event_type_ptev_disabled, pt_event_type_ptev_enabled, pt_event_type_ptev_exec_mode,
+    pt_event_type_ptev_exstop, pt_event_type_ptev_mnt, pt_event_type_ptev_mwait,
+    pt_event_type_ptev_overflow, pt_event_type_ptev_paging, pt_event_type_ptev_ptwrite,
+    pt_event_type_ptev_pwre, pt_event_type_ptev_pwrx, pt_event_type_ptev_stop,
+    pt_event_type_ptev_tick, pt_event_type_ptev_tsx, pt_event_type_ptev_vmcs,
 };
 
 mod enabled;
@@ -57,8 +44,8 @@ pub use cbr::*;
 mod qry;
 pub use qry::*;
 
-#[derive(Debug)]
-pub enum Payload {
+#[derive(Debug, Clone)]
+pub enum EventType {
     Enabled(Enabled),
     Disabled(Disabled),
     AsnycDisabled(AsyncDisabled),
@@ -78,45 +65,34 @@ pub enum Payload {
     Tick(Tick),
     Mnt(Mnt),
     Cbr(Cbr),
-    Stop,
+    Stop(Stop),
 }
 
-impl From<Event> for Payload {
-    fn from(evt: Event) -> Payload {
-        unsafe {
-            match evt.0.type_ {
-                PT_EVENT_TYPE_PTEV_ASYNC_BRANCH => {
-                    Payload::AsyncBranch(AsyncBranch(evt.0.variant.async_branch))
-                }
-                PT_EVENT_TYPE_PTEV_ASYNC_DISABLED => {
-                    Payload::AsnycDisabled(AsyncDisabled(evt.0.variant.async_disabled))
-                }
-                PT_EVENT_TYPE_PTEV_ASYNC_PAGING => {
-                    Payload::AsyncPaging(AsyncPaging(evt.0.variant.async_paging))
-                }
-                PT_EVENT_TYPE_PTEV_ASYNC_VMCS => {
-                    Payload::AsyncVmcs(AsyncVmcs(evt.0.variant.async_vmcs))
-                }
-                PT_EVENT_TYPE_PTEV_CBR => Payload::Cbr(Cbr(evt.0.variant.cbr)),
-                PT_EVENT_TYPE_PTEV_DISABLED => Payload::Disabled(Disabled(evt.0.variant.disabled)),
-                PT_EVENT_TYPE_PTEV_ENABLED => Payload::Enabled(Enabled(evt.0.variant.enabled)),
-                PT_EVENT_TYPE_PTEV_EXEC_MODE => {
-                    Payload::ExecMode(ExecMode(evt.0.variant.exec_mode))
-                }
-                PT_EVENT_TYPE_PTEV_EXSTOP => Payload::Exstop(Exstop(evt.0.variant.exstop)),
-                PT_EVENT_TYPE_PTEV_MNT => Payload::Mnt(Mnt(evt.0.variant.mnt)),
-                PT_EVENT_TYPE_PTEV_MWAIT => Payload::Mwait(Mwait(evt.0.variant.mwait)),
-                PT_EVENT_TYPE_PTEV_OVERFLOW => Payload::Overflow(Overflow(evt.0.variant.overflow)),
-                PT_EVENT_TYPE_PTEV_PAGING => Payload::Paging(Paging(evt.0.variant.paging)),
-                PT_EVENT_TYPE_PTEV_PTWRITE => Payload::Ptwrite(Ptwrite(evt.0.variant.ptwrite)),
-                PT_EVENT_TYPE_PTEV_PWRE => Payload::Pwre(Pwre(evt.0.variant.pwre)),
-                PT_EVENT_TYPE_PTEV_PWRX => Payload::Pwrx(Pwrx(evt.0.variant.pwrx)),
-                PT_EVENT_TYPE_PTEV_TICK => Payload::Tick(Tick(evt.0.variant.tick)),
-                PT_EVENT_TYPE_PTEV_TSX => Payload::Tsx(Tsx(evt.0.variant.tsx)),
-                PT_EVENT_TYPE_PTEV_VMCS => Payload::Vmcs(Vmcs(evt.0.variant.vmcs)),
-                PT_EVENT_TYPE_PTEV_STOP => Payload::Stop,
-                _ => unreachable!(),
-            }
+impl From<Event> for EventType {
+    #[allow(non_upper_case_globals)]
+    fn from(event: Event) -> EventType {
+        match event.0.type_ {
+            pt_event_type_ptev_async_branch => EventType::AsyncBranch(AsyncBranch{event}),
+            pt_event_type_ptev_async_disabled => EventType::AsnycDisabled(AsyncDisabled{event}),
+            pt_event_type_ptev_async_paging => EventType::AsyncPaging(AsyncPaging{event}),
+            pt_event_type_ptev_async_vmcs => EventType::AsyncVmcs(AsyncVmcs{event}),
+            pt_event_type_ptev_cbr => EventType::Cbr(Cbr{event}),
+            pt_event_type_ptev_disabled => EventType::Disabled(Disabled{event}),
+            pt_event_type_ptev_enabled => EventType::Enabled(Enabled{event}),
+            pt_event_type_ptev_exec_mode => EventType::ExecMode(ExecMode{event}),
+            pt_event_type_ptev_exstop => EventType::Exstop(Exstop{event}),
+            pt_event_type_ptev_mnt => EventType::Mnt(Mnt{event}),
+            pt_event_type_ptev_mwait => EventType::Mwait(Mwait{event}),
+            pt_event_type_ptev_overflow => EventType::Overflow(Overflow{event}),
+            pt_event_type_ptev_paging => EventType::Paging(Paging{event}),
+            pt_event_type_ptev_ptwrite => EventType::Ptwrite(Ptwrite{event}),
+            pt_event_type_ptev_pwre => EventType::Pwre(Pwre{event}),
+            pt_event_type_ptev_pwrx => EventType::Pwrx(Pwrx{event}),
+            pt_event_type_ptev_tick => EventType::Tick(Tick{event}),
+            pt_event_type_ptev_tsx => EventType::Tsx(Tsx{event}),
+            pt_event_type_ptev_vmcs => EventType::Vmcs(Vmcs{event}),
+            pt_event_type_ptev_stop => EventType::Stop(Stop{event}),
+            _ => unreachable!(),
         }
     }
 }
@@ -127,26 +103,26 @@ pub struct Event(pub(crate) pt_event);
 impl Event {
     /// A flag indicating that the event IP has been suppressed.
     #[must_use]
-    pub fn ip_suppressed(self) -> bool {
+    pub fn ip_suppressed(&self) -> bool {
         self.0.ip_suppressed() > 0
     }
 
     /// A flag indicating that the event is for status update.
     #[must_use]
-    pub fn status_update(self) -> bool {
+    pub fn status_update(&self) -> bool {
         self.0.status_update() > 0
     }
 
     /// A flag indicating that the event has timing information.
     #[must_use]
-    pub fn has_tsc(self) -> bool {
+    pub fn has_tsc(&self) -> bool {
         self.0.has_tsc() > 0
     }
 
     /// The time stamp count of the event.
     /// This field is only valid if @has_tsc is set.
     #[must_use]
-    pub fn tsc(self) -> u64 {
+    pub const fn tsc(&self) -> u64 {
         self.0.tsc
     }
 
@@ -155,7 +131,7 @@ impl Event {
     /// This gives an idea about the quality of the \@tsc.
     /// The more packets were dropped, the less precise timing is.
     #[must_use]
-    pub fn lost_mtc(self) -> u32 {
+    pub const fn lost_mtc(&self) -> u32 {
         self.0.lost_mtc
     }
 
@@ -164,15 +140,21 @@ impl Event {
     /// This gives an idea about the quality of the \@tsc.
     /// The more packets were dropped, the less precise timing is.
     #[must_use]
-    pub fn lost_cyc(self) -> u32 {
+    pub const fn lost_cyc(&self) -> u32 {
         self.0.lost_cyc
     }
 
     /// Event specific data.
     #[must_use]
-    pub fn payload(self) -> Payload {
+    pub fn event_type(self) -> EventType {
         self.into()
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(transparent)]
+pub struct Stop{
+    pub(super) event: Event
 }
 
 #[cfg(test)]
@@ -203,9 +185,6 @@ mod test {
         assert_eq!(evt.lost_mtc(), 2);
         assert_eq!(evt.lost_cyc(), 3);
 
-        match evt.payload() {
-            Payload::Stop => (),
-            _ => unreachable!(),
-        }
+        assert!(matches!(EventType::from(evt), EventType::Stop(Stop{event: evt})));
     }
 }
