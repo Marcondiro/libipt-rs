@@ -11,7 +11,7 @@ description = "The Intel Processor Trace (Intel PT) Decoder Library is Intel's r
 categories = ["development-tools::debugging", "development-tools::profiling"]
 repository = "https://github.com/sum-catnip/libipt-rs"
 keywords = ["IntelPT", "ProcessorTrace", "libipt"]
-rust-version = "1.82.0"
+rust-version = "1.83.0"
 
 [features]
 libipt_master = ["libipt-sys/libipt_master"]
